@@ -1,0 +1,9 @@
+{
+  "if": {
+    "field": "type",
+    "equals": "Microsoft.MachineLearningServices/workspaces/serverlessEndpoints"
+  },
+  "then": {
+    "effect": "Audit"
+  }
+}
