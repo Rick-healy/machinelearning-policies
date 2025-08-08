@@ -36,10 +36,8 @@
                 "equals": 0
               },
               {
-                "greater": [
-                  "[length(parameters('allowedModelIds'))]",
-                  0
-                ]
+                "value": "[length(parameters('allowedModelIds'))]",
+                "greater": 0
               }
             ]
           }
