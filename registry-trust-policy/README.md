@@ -1,23 +1,27 @@
-# ML Model Registry Trust Policy
+# ML Model Deployment Registry Trust Policy
 
 ## Overview
 
-This Azure Policy ensures that ML models are deployed only from trusted registries. It acts as a foundational security control by validating the source of models before any deployment can proceed.
+This Azure Policy controls which registries can be used as sources for **Azure ML model deployments**. It acts as a foundational security control by validating the source registry of models during deployment operations to Azure ML endpoints.
+
+**Scope**: Model deployment operations only - this policy does not control model training, data access, or other ML lifecycle activities.
 
 ## Policy Purpose
 
-- **Security Boundary**: Establishes organizational trust boundaries for model sources
+- **Deployment Security Boundary**: Establishes organizational trust boundaries for model deployment sources
 - **Supply Chain Security**: Prevents deployment of models from untrusted or unknown registries
-- **Baseline Control**: Works in conjunction with the Model Approval Policy for complete governance
+- **Baseline Deployment Control**: Works in conjunction with the Model Deployment Approval Policy for complete deployment governance
 
 ## How It Works
 
-The policy evaluates the `modelId` field of serverless endpoint deployments and checks if the model comes from an approved registry pattern. If the model registry is not in the approved list, the deployment is blocked or audited based on the policy effect.
+The policy evaluates the `modelId` field during serverless endpoint deployment operations and checks if the model comes from an approved registry pattern. If the model registry is not in the approved list, the deployment is blocked or audited based on the policy effect.
+
+**Trigger**: Only activates during Azure ML model deployment operations to endpoints (online, batch, serverless).
 
 ## Policy Logic
 
 ```
-IF deployment is a serverless endpoint
+IF operation is a model deployment to serverless endpoint
 AND modelId exists
 AND modelId does NOT contain any approved registry pattern
 THEN apply policy effect (Deny/Audit)
@@ -27,8 +31,8 @@ THEN apply policy effect (Deny/Audit)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `allowedRegistries` | Array | `["azureml://registries/azureml/", "azureml://registries/azureml-meta/"]` | Registry patterns to allow |
-| `effect` | String | `"Deny"` | Policy enforcement mode |
+| `allowedRegistries` | Array | `["azureml://registries/azureml/", "azureml://registries/azureml-meta/"]` | Registry patterns allowed for model deployments |
+| `effect` | String | `"Deny"` | Policy enforcement mode for deployment operations |
 
 ## Registry Patterns
 
@@ -38,6 +42,7 @@ azureml://registries/{registry-name}/
 ```
 
 ### Common Registry Patterns
+
 - `azureml://registries/azureml/` - Microsoft's built-in models
 - `azureml://registries/azureml-meta/` - Meta's models  
 - `azureml://registries/azureml-openai/` - OpenAI models
@@ -49,9 +54,9 @@ azureml://registries/{registry-name}/
 
 ```bash
 az policy definition create \
-  --name "MLRegistryTrustPolicy" \
-  --display-name "ML Model Registry Trust Policy" \
-  --description "Ensures ML models are deployed only from trusted registries" \
+  --name "MLModelDeploymentRegistryTrustPolicy" \
+  --display-name "ML Model Deployment Registry Trust Policy" \
+  --description "Controls which registries can be used as sources for Azure ML model deployments" \
   --rules policy-rules.json \
   --params policy-parameters.json \
   --mode "Indexed"
@@ -59,7 +64,7 @@ az policy definition create \
 
 ### Step 2: Configure Parameters
 
-Edit `assignment-parameters.json` with your organization's trusted registries:
+Edit `assignment-parameters.json` with your organization's trusted registries for model deployments:
 
 ```json
 {
@@ -80,9 +85,9 @@ Edit `assignment-parameters.json` with your organization's trusted registries:
 
 ```bash
 az policy assignment create \
-  --name "ml-registry-trust" \
-  --display-name "ML Model Registry Trust Policy" \
-  --policy "/subscriptions/{subscription-id}/providers/Microsoft.Authorization/policyDefinitions/MLRegistryTrustPolicy" \
+  --name "ml-model-deployment-registry-trust" \
+  --display-name "ML Model Deployment Registry Trust Policy" \
+  --policy "/subscriptions/{subscription-id}/providers/Microsoft.Authorization/policyDefinitions/MLModelDeploymentRegistryTrustPolicy" \
   --scope "/subscriptions/{subscription-id}" \
   --params assignment-parameters.json
 ```

@@ -1,23 +1,27 @@
-# ML Model Approval Policy
+# Azure ML Model Deployment Approval Policy
 
 ## Overview
 
-This Azure Policy manages explicit approval and blocking of specific ML models. It provides granular control over which individual models can be deployed, regardless of their registry source.
+This Azure Policy manages explicit approval and blocking of specific ML models for deployment operations. It provides granular control over which individual models can be deployed as Azure ML serverless endpoints, regardless of their registry source.
 
 ## Policy Purpose
 
-- **Granular Control**: Manage approval of specific models within trusted registries
-- **Security Blocking**: Explicitly block problematic or deprecated models
+This policy is designed to govern **model deployment operations only**. It provides:
+
+- **Deployment Authorization**: Manage approval of specific models for serverless endpoint deployment
+- **Security Controls**: Explicitly block problematic or deprecated models from being deployed
 - **Compliance Tracking**: Audit and track deployment of specific models for governance
 - **Change Management**: Control model deployments through explicit approval processes
 
+**Scope Clarification**: This policy only affects model deployment operations. It does not control model training, data access, workspace creation, or other Azure ML lifecycle activities.
+
 ## How It Works
 
-The policy maintains two lists:
+The policy maintains two lists for deployment control:
 1. **Deny List** (Highest Priority): Models explicitly blocked from deployment
 2. **Allow List** (When configured): Models explicitly approved for deployment
 
-If a model appears on the deny list, it's blocked. If an allow list is configured and not empty, only models on that list are permitted.
+If a model appears on the deny list, deployment is blocked. If an allow list is configured and not empty, only models on that list are permitted for deployment.
 
 ## Policy Logic
 
@@ -25,9 +29,9 @@ If a model appears on the deny list, it's blocked. If an allow list is configure
 IF deployment is a serverless endpoint
 AND modelId exists
 THEN:
-  IF modelId is in deniedModelIds → BLOCK
-  ELSE IF allowedModelIds is not empty AND modelId is NOT in allowedModelIds → BLOCK
-  ELSE → ALLOW
+  IF modelId is in deniedModelIds → BLOCK DEPLOYMENT
+  ELSE IF allowedModelIds is not empty AND modelId is NOT in allowedModelIds → BLOCK DEPLOYMENT
+  ELSE → ALLOW DEPLOYMENT
 ```
 
 ## Parameters
@@ -35,8 +39,8 @@ THEN:
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `allowedModelIds` | Array | `[]` | Specific models approved for deployment |
-| `deniedModelIds` | Array | `[]` | Models explicitly blocked (highest priority) |
-| `effect` | String | `"Audit"` | Policy enforcement mode |
+| `deniedModelIds` | Array | `[]` | Models explicitly blocked from deployment (highest priority) |
+| `effect` | String | `"Audit"` | Policy enforcement mode for deployment operations |
 
 ## Model ID Format
 
@@ -92,9 +96,9 @@ Use both allow and deny lists for maximum control.
 
 ```bash
 az policy definition create \
-  --name "MLModelApprovalPolicy" \
-  --display-name "ML Model Approval Policy" \
-  --description "Manages explicit approval and blocking of specific ML models" \
+  --name "MLModelDeploymentApprovalPolicy" \
+  --display-name "ML Model Deployment Approval Policy" \
+  --description "Manages explicit approval and blocking of specific ML models for deployment operations" \
   --rules policy-rules.json \
   --params policy-parameters.json \
   --mode "Indexed"
@@ -102,7 +106,7 @@ az policy definition create \
 
 ### Step 2: Configure Parameters
 
-Edit `assignment-parameters.json` based on your governance model:
+Edit `assignment-parameters.json` based on your deployment governance model:
 
 ```json
 {
@@ -127,9 +131,9 @@ Edit `assignment-parameters.json` based on your governance model:
 
 ```bash
 az policy assignment create \
-  --name "ml-model-approval" \
-  --display-name "ML Model Approval Policy" \
-  --policy "/subscriptions/{subscription-id}/providers/Microsoft.Authorization/policyDefinitions/MLModelApprovalPolicy" \
+  --name "ml-model-deployment-approval" \
+  --display-name "ML Model Deployment Approval Policy" \
+  --policy "/subscriptions/{subscription-id}/providers/Microsoft.Authorization/policyDefinitions/MLModelDeploymentApprovalPolicy" \
   --scope "/subscriptions/{subscription-id}" \
   --params assignment-parameters.json
 ```
@@ -264,30 +268,39 @@ az policy state trigger-scan --resource-group {rg-name}
 ## Advanced Configuration
 
 ### Dynamic Allow Lists
-For organizations with frequent model changes, consider:
-- Using Azure Key Vault for storing model lists
-- Implementing automated approval workflows
-- Integrating with CI/CD pipelines for model deployment
+For organizations with frequent model deployment changes, consider:
+- Using Azure Key Vault for storing model deployment lists
+- Implementing automated approval workflows for model deployments
+- Integrating with CI/CD pipelines for model deployment governance
 
 ### Custom Compliance Reporting
-Create custom queries for specific compliance reporting:
+Create custom queries for specific deployment compliance reporting:
 
 ```bash
-# Models blocked by deny list
+# Models blocked by deny list during deployment attempts
 az graph query -q "
 PolicyResources
 | where type == 'microsoft.policyinsights/policystates'
-| where properties.policyAssignmentName == 'ml-model-approval'
+| where properties.policyAssignmentName == 'ml-model-deployment-approval'
 | where properties.complianceReasonCode contains 'denied'
 "
 
-# Most commonly used non-compliant models
+# Most commonly attempted non-compliant model deployments
 az graph query -q "
 PolicyResources
 | where type == 'microsoft.policyinsights/policystates'
-| where properties.policyAssignmentName == 'ml-model-approval'
+| where properties.policyAssignmentName == 'ml-model-deployment-approval'
 | where properties.complianceState == 'NonCompliant'
 | summarize count() by ModelId = tostring(properties.resourceDetails.modelId)
 | order by count_ desc
 "
 ```
+
+## Architecture Notes
+
+This policy works in conjunction with the **ML Model Deployment Registry Trust Policy** to provide defense-in-depth for model deployments:
+
+- **Registry Trust Policy**: Controls which registries can be used as sources for model deployments
+- **Model Approval Policy**: Controls which specific models can be deployed from any allowed registry
+
+Both policies focus exclusively on deployment operations and do not affect other Azure ML activities like training, data processing, or workspace management.

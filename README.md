@@ -1,26 +1,28 @@
-# Azure ML Deployment Control Policies
+# Azure ML Model Deployment Control Policies
 
 ## Overview
 
-This repository contains Azure Policy definitions for comprehensive ML model deployment governance. The policies are designed to work together to provide layered security and compliance controls for Azure Machine Learning deployments.
+This repository contains Azure Policy definitions for controlling **Azure ML model deployments** specifically. These policies govern which models can be deployed to Azure ML endpoints (online, batch, and serverless) and from which sources they can be deployed.
+
+**Scope**: Model deployment operations only - these policies do not control model training, data access, compute resources, or other ML lifecycle activities.
 
 ## Architecture
 
-The governance framework consists of two complementary policies that implement defense-in-depth for ML model deployments:
+The governance framework consists of two complementary policies that implement defense-in-depth for **ML model deployment operations**:
 
-### 🛡️ Registry Trust Policy
-**Purpose**: Foundational security boundary
+### 🛡️ Model Deployment Registry Trust Policy
+**Purpose**: Controls which registries can be used as sources for model deployments
 - **Location**: `./registry-trust-policy/`
-- **Function**: Ensures models come only from trusted registries
+- **Function**: Ensures deployed models come only from trusted registries
 - **Mode**: Typically **Deny** (hard enforcement)
-- **Scope**: Organizational boundaries
+- **Scope**: Organizational deployment source boundaries
 
-### 📋 Model Approval Policy  
-**Purpose**: Granular model management
+### 📋 Model Deployment Approval Policy  
+**Purpose**: Controls which specific models can be deployed
 - **Location**: `./model-approval-policy/`
-- **Function**: Manages specific model approvals and blocking
+- **Function**: Manages specific model deployment approvals and blocking
 - **Mode**: Typically **Audit** (tracking and governance)
-- **Scope**: Individual model control
+- **Scope**: Individual model deployment control
 
 ## Repository Structure
 
@@ -45,74 +47,79 @@ The governance framework consists of two complementary policies that implement d
 - Policy definition creation permissions
 - Target subscription/resource group identified
 
-### 1. Deploy Registry Trust Policy
+### 1. Deploy Model Deployment Registry Trust Policy
 
 ```bash
 cd registry-trust-policy
 
 # Create policy definition
 az policy definition create \
-  --name "MLRegistryTrustPolicy" \
-  --display-name "ML Model Registry Trust Policy" \
-  --description "Ensures ML models are deployed only from trusted registries" \
+  --name "MLModelDeploymentRegistryTrustPolicy" \
+  --display-name "ML Model Deployment Registry Trust Policy" \
+  --description "Controls which registries can be used as sources for Azure ML model deployments" \
   --rules policy-rules.json \
   --params policy-parameters.json \
   --mode "Indexed"
 
 # Assign policy
 az policy assignment create \
-  --name "ml-registry-trust" \
-  --policy "MLRegistryTrustPolicy" \
+  --name "ml-model-deployment-registry-trust" \
+  --policy "MLModelDeploymentRegistryTrustPolicy" \
   --scope "/subscriptions/{subscription-id}" \
   --params assignment-parameters.json
 ```
 
-### 2. Deploy Model Approval Policy
+### 2. Deploy Model Deployment Approval Policy
 
 ```bash
 cd ../model-approval-policy
 
 # Create policy definition
 az policy definition create \
-  --name "MLModelApprovalPolicy" \
-  --display-name "ML Model Approval Policy" \
-  --description "Manages explicit approval and blocking of specific ML models" \
+  --name "MLModelDeploymentApprovalPolicy" \
+  --display-name "ML Model Deployment Approval Policy" \
+  --description "Controls which specific models can be deployed to Azure ML endpoints" \
   --rules policy-rules.json \
   --params policy-parameters.json \
   --mode "Indexed"
 
 # Assign policy
 az policy assignment create \
-  --name "ml-model-approval" \
-  --policy "MLModelApprovalPolicy" \
+  --name "ml-model-deployment-approval" \
+  --policy "MLModelDeploymentApprovalPolicy" \
   --scope "/subscriptions/{subscription-id}" \
   --params assignment-parameters.json
 ```
 
 ## Recommended Deployment Strategy
 
-### Phase 1: Foundation (Registry Trust)
-1. Deploy **Registry Trust Policy** in **Deny** mode
-2. Configure trusted registries (azureml, azureml-meta, etc.)
-3. Validate all deployments come from approved sources
+### Phase 1: Foundation (Deployment Registry Control)
 
-### Phase 2: Governance (Model Approval)
-1. Deploy **Model Approval Policy** in **Audit** mode
-2. Monitor model usage patterns for 30 days
-3. Identify commonly used models for approval
+1. Deploy **Model Deployment Registry Trust Policy** in **Deny** mode
+2. Configure trusted registries (azureml, azureml-meta, etc.)
+3. Validate all model deployments come from approved registry sources
+
+### Phase 2: Governance (Deployment Model Control)
+
+1. Deploy **Model Deployment Approval Policy** in **Audit** mode
+2. Monitor model deployment patterns for 30 days
+3. Identify commonly deployed models for approval
 
 ### Phase 3: Enforcement (Optional)
-1. Create model allow lists based on audit data
-2. Switch Model Approval Policy to **Deny** mode for strict environments
-3. Implement exception processes for new model requests
+
+1. Create model deployment allow lists based on audit data
+2. Switch Model Deployment Approval Policy to **Deny** mode for strict environments
+3. Implement exception processes for new model deployment requests
 
 ## Policy Interaction
 
-The policies work together in this sequence:
+The policies work together in this sequence for **model deployment operations**:
 
-1. **Registry Trust Policy** evaluates first (if in Deny mode, blocks untrusted registries)
-2. **Model Approval Policy** evaluates next (tracks/blocks specific models)
-3. Both policies generate audit logs for compliance tracking
+1. **Model Deployment Registry Trust Policy** evaluates first (if in Deny mode, blocks deployments from untrusted registries)
+2. **Model Deployment Approval Policy** evaluates next (tracks/blocks specific model deployments)
+3. Both policies generate audit logs for deployment compliance tracking
+
+**Note**: These policies only trigger during model deployment operations to Azure ML endpoints. They do not affect model training, data access, or other ML lifecycle activities.
 
 ## Best Practices
 
@@ -132,22 +139,23 @@ The policies work together in this sequence:
 
 ## Support and Troubleshooting
 
-For detailed information about each policy, see:
-- **Registry Trust Policy**: `./registry-trust-policy/README.md`
-- **Model Approval Policy**: `./model-approval-policy/README.md`
+For detailed information about each model deployment policy, see:
+
+- **Model Deployment Registry Trust Policy**: `./registry-trust-policy/README.md`
+- **Model Deployment Approval Policy**: `./model-approval-policy/README.md`
 
 ### Common Issues
 
-1. **Policy Not Triggering**: Check resource type and field paths
-2. **Unexpected Blocks**: Verify configuration and wait for propagation
-3. **Performance Issues**: Policies only evaluate at deployment time
+1. **Policy Not Triggering**: Check resource type and field paths for Azure ML serverless endpoints
+2. **Unexpected Blocks**: Verify configuration and wait for propagation (deployment policies only affect endpoint deployments)
+3. **Performance Issues**: Policies only evaluate during model deployment operations, not ongoing model usage
 
 ### Support Commands
 
 ```bash
-# Check both policy assignments
-az policy assignment list --query "[?contains(name, 'ml-')]"
+# Check both model deployment policy assignments
+az policy assignment list --query "[?contains(name, 'ml-model-deployment')]"
 
-# View compliance across both policies
-az policy state list --all --query "[?contains(properties.policyAssignmentName, 'ml-')]"
+# View compliance across both model deployment policies
+az policy state list --all --query "[?contains(properties.policyAssignmentName, 'ml-model-deployment')]"
 ```
