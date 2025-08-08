@@ -300,7 +300,7 @@ PolicyResources
 
 This policy works in conjunction with the **ML Model Deployment Registry Trust Policy** to provide defense-in-depth for model deployments:
 
-- **Registry Trust Policy**: Controls which registries can be used as sources for model deployments
+- **Registry Trust Policy** (see `../model-deployment-registry-trust-policy/`): Controls which registries can be used as sources for model deployments
 - **Model Approval Policy**: Controls which specific models can be deployed from any allowed registry
 
 Both policies focus exclusively on deployment operations and do not affect other Azure ML activities like training, data processing, or workspace management.

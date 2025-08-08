@@ -12,14 +12,14 @@ The governance framework consists of two complementary policies that implement d
 
 ### 🛡️ Model Deployment Registry Trust Policy
 **Purpose**: Controls which registries can be used as sources for model deployments
-- **Location**: `./registry-trust-policy/`
+- **Location**: `./model-deployment-registry-trust-policy/`
 - **Function**: Ensures deployed models come only from trusted registries
 - **Mode**: Typically **Deny** (hard enforcement)
 - **Scope**: Organizational deployment source boundaries
 
 ### 📋 Model Deployment Approval Policy  
 **Purpose**: Controls which specific models can be deployed
-- **Location**: `./model-approval-policy/`
+- **Location**: `./model-deployment-approval-policy/`
 - **Function**: Manages specific model deployment approvals and blocking
 - **Mode**: Typically **Audit** (tracking and governance)
 - **Scope**: Individual model deployment control
@@ -27,12 +27,12 @@ The governance framework consists of two complementary policies that implement d
 ## Repository Structure
 
 ```
-├── registry-trust-policy/
+├── model-deployment-registry-trust-policy/
 │   ├── README.md                    # Registry policy documentation
 │   ├── policy-rules.json           # Registry validation logic
 │   ├── policy-parameters.json      # Registry policy parameters
 │   └── assignment-parameters.json  # Default registry configuration
-├── model-approval-policy/
+├── model-deployment-approval-policy/
 │   ├── README.md                    # Model policy documentation
 │   ├── policy-rules.json           # Model approval/denial logic
 │   ├── policy-parameters.json      # Model policy parameters
@@ -50,7 +50,7 @@ The governance framework consists of two complementary policies that implement d
 ### 1. Deploy Model Deployment Registry Trust Policy
 
 ```bash
-cd registry-trust-policy
+cd model-deployment-registry-trust-policy
 
 # Create policy definition
 az policy definition create \
@@ -72,7 +72,7 @@ az policy assignment create \
 ### 2. Deploy Model Deployment Approval Policy
 
 ```bash
-cd ../model-approval-policy
+cd ../model-deployment-approval-policy
 
 # Create policy definition
 az policy definition create \
@@ -141,8 +141,8 @@ The policies work together in this sequence for **model deployment operations**:
 
 For detailed information about each model deployment policy, see:
 
-- **Model Deployment Registry Trust Policy**: `./registry-trust-policy/README.md`
-- **Model Deployment Approval Policy**: `./model-approval-policy/README.md`
+- **Model Deployment Registry Trust Policy**: `./model-deployment-registry-trust-policy/README.md`
+- **Model Deployment Approval Policy**: `./model-deployment-approval-policy/README.md`
 
 ### Common Issues
 

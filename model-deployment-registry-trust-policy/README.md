@@ -185,6 +185,6 @@ az policy state trigger-scan --resource-group {rg-name}
 ## Related Policies
 
 This policy works best when combined with:
-- **Model Approval Policy**: For specific model allow/deny lists
+- **Model Deployment Approval Policy**: For specific model allow/deny lists (see `../model-deployment-approval-policy/`)
 - **Compute Resource Policies**: For controlling where models can be deployed
 - **Network Access Policies**: For controlling model endpoint accessibility
