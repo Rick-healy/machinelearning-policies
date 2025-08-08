@@ -1,0 +1,31 @@
+{
+  "allowedModelIds": {
+    "type": "Array",
+    "metadata": {
+      "displayName": "Allowed Model IDs",
+      "description": "List of approved model IDs that can be deployed"
+    },
+    "defaultValue": []
+  },
+  "deniedModelIds": {
+    "type": "Array",
+    "metadata": {
+      "displayName": "Denied Model IDs",
+      "description": "List of model IDs explicitly blocked from deployment (highest priority)"
+    },
+    "defaultValue": []
+  },
+  "effect": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Effect",
+      "description": "Enable or disable the execution of the policy"
+    },
+    "allowedValues": [
+      "Audit",
+      "Deny",
+      "Disabled"
+    ],
+    "defaultValue": "Audit"
+  }
+}

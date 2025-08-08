@@ -1,0 +1,28 @@
+{
+  "if": {
+    "allOf": [
+      {
+        "field": "type",
+        "equals": "Microsoft.MachineLearningServices/workspaces/serverlessEndpoints"
+      },
+      {
+        "field": "Microsoft.MachineLearningServices/workspaces/serverlessEndpoints/modelSettings.modelId",
+        "exists": "true"
+      },
+      {
+        "count": {
+          "value": "[parameters('allowedRegistries')]",
+          "name": "registryPattern",
+          "where": {
+            "value": "[contains(field('Microsoft.MachineLearningServices/workspaces/serverlessEndpoints/modelSettings.modelId'), current('registryPattern'))]",
+            "equals": true
+          }
+        },
+        "equals": 0
+      }
+    ]
+  },
+  "then": {
+    "effect": "[parameters('effect')]"
+  }
+}

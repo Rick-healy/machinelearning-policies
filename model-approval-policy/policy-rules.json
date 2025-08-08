@@ -1,0 +1,53 @@
+{
+  "if": {
+    "allOf": [
+      {
+        "field": "type",
+        "equals": "Microsoft.MachineLearningServices/workspaces/serverlessEndpoints"
+      },
+      {
+        "field": "Microsoft.MachineLearningServices/workspaces/serverlessEndpoints/modelSettings.modelId",
+        "exists": "true"
+      },
+      {
+        "anyOf": [
+          {
+            "count": {
+              "value": "[parameters('deniedModelIds')]",
+              "name": "deniedModel",
+              "where": {
+                "value": "[field('Microsoft.MachineLearningServices/workspaces/serverlessEndpoints/modelSettings.modelId')]",
+                "equals": "[current('deniedModel')]"
+              }
+            },
+            "greater": 0
+          },
+          {
+            "allOf": [
+              {
+                "count": {
+                  "value": "[parameters('allowedModelIds')]",
+                  "name": "allowedModel",
+                  "where": {
+                    "value": "[field('Microsoft.MachineLearningServices/workspaces/serverlessEndpoints/modelSettings.modelId')]",
+                    "equals": "[current('allowedModel')]"
+                  }
+                },
+                "equals": 0
+              },
+              {
+                "greater": [
+                  "[length(parameters('allowedModelIds'))]",
+                  0
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "effect": "[parameters('effect')]"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "allowedRegistries": {
+    "value": [
+      "azureml://registries/azureml/",
+      "azureml://registries/azureml-meta/",
+      "azureml://registries/azureml-openai/"
+    ]
+  },
+  "effect": {
+    "value": "Deny"
+  }
+}

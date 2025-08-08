@@ -1,0 +1,26 @@
+{
+  "allowedRegistries": {
+    "type": "Array",
+    "metadata": {
+      "displayName": "Allowed Model Registries",
+      "description": "List of approved registry patterns for ML model deployments"
+    },
+    "defaultValue": [
+      "azureml://registries/azureml/",
+      "azureml://registries/azureml-meta/"
+    ]
+  },
+  "effect": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Effect",
+      "description": "Enable or disable the execution of the policy"
+    },
+    "allowedValues": [
+      "Audit",
+      "Deny",
+      "Disabled"
+    ],
+    "defaultValue": "Deny"
+  }
+}
